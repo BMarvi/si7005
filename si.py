@@ -28,18 +28,17 @@ class Si7005():
     def __sendcommand(self,value):
         self.i2c_bus.write_byte_data(self.address,0x03,value)
 
-    def readdata(self,reg):
+    def __readdata(self,reg):
         return self.i2c_bus.read_byte_data(self.address,reg)
 
     def readTemperature(self):
         self.__sendcommand(0x11)
         while not self.__conversionReady():
             time.sleep(0.01)
-        datah = self.readdata(0x01)
-        datal = self.readdata(0x02)
+        datah = self.__readdata(0x01)
+        datal = self.__readdata(0x02)
         datat = (datah << 6) + (datal >>2)
-        temp  = (datat/32.0) - 50
-        self.temp = temp
+        self.temp  = (datat/32.0) - 50
         return self.temp
 
     def readHumidity(self):
@@ -47,8 +46,8 @@ class Si7005():
         self.__sendcommand(0x01)
         while not self.__conversionReady():
             time.sleep(0.01)
-        datah = self.readdata(0x01)
-        datal = self.readdata(0x02)
+        datah = self.__readdata(0x01)
+        datal = self.__readdata(0x02)
         datat = (datah << 4) + (datal >> 4)
         self.notLinHum = (datat/16.0) - 24
         self.notComHum = self.notLinHum - (self.notLinHum**2 * self.A2 + self.notLinHum * self.A1 + self.A0)
@@ -60,16 +59,18 @@ class Si7005():
         return (self.hum, self.temp)
 
     def setHeater(self):
+        # to be implemented soon
         pass
 
     def __conversionReady(self):
-        status = self.readdata(0x00)
+        status = self.__readdata(0x00)
         return (( status & 1 ) == 0)
 
     def __str__(self):
         self.readHumidity()
         return 'Umidity: %.2f, Temperature: %.2f' % (self.hum, self.temp)
 
+    # Short alias for methods
     getT  = readTemperature
     getH  = readHumidity
     getHT = readHumidityTemperature
